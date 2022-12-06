@@ -2,13 +2,11 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy import stats
 import collections
 #import datetime
-import matplotlib.pyplot as plt
-import numpy as np
 from sklearn import datasets, linear_model
 import scipy
+import datetime
 
 df_site = pd.read_csv(r"SITE_INFO.csv")
 df_waterlevel= pd.read_csv(r"WATERLEVEL.csv",dtype={"Comment": "string", "Original Direction": "string"})
@@ -18,6 +16,7 @@ df_waterlevel['Water level in feet relative to NAVD88'] = pd.to_numeric(df_water
 # Depth to water below land surface in ft
 df_waterlevel['Depth to Water Below Land Surface in ft.'] = pd.to_numeric(df_waterlevel['Depth to Water Below Land Surface in ft.'],errors='coerce')
 
+# Clean Data, average water level for each site, so can take latest date to represent each site 
 df_waterlevel2 = df_waterlevel[['Water level in feet relative to NAVD88']].values.tolist()
 df_date = df_waterlevel[['Time']].values.tolist()
 df_SiteNo = df_waterlevel[['SiteNo']].values.tolist()
@@ -39,18 +38,48 @@ RM = -1
 RD = -1
 SiteNosAlready = []
 origLevel = -1
-DiffLevel = -1
+counter = 0
+total = 0
+AVG = 0
+first = 0
 for i in range(len(waterlevels)):
     if SiteNos[i] in SiteNosAlready:
         RY = Dates[i].split('-')[0]
         RM = Dates[i].split('-')[1]
         RD = Dates[i].split('-')[2]
         RD = RD.split('T')[0]
-        diffLevel = int(waterlevels[i]) - origLevel
-    if SiteNos[i] not in SiteNosAlready:
+        total += int(waterlevels[i])
+        counter += 1
+    if SiteNos[i] not in SiteNosAlready and first == 1:
         SiteNosAlready.append(SiteNos[i])
-        origLevel = int(waterlevels[i])
-        diff[SiteNos[i]] = 0;
+        AVG = total / counter
+        dateString = RY + "-" + RM + "-" + RD
+        diff[dateString] = AVG
+        counter = 1
+        total = int(waterlevels[i])
+    if SiteNos[i] not in SiteNosAlready and first == 0:
+        SiteNosAlready.append(SiteNos[i])
+        counter = 1
+        total = int(waterlevels[i])
+        first = 1
+
+#Convert each time string to datetime obj
+format = '%Y-%m-%d'
+differenceWaterLevel = {}
+for key,value in diff.items():
+    datetimes = datetime.datetime.strptime(key,format)
+    differenceWaterLevel[datetimes] = value
+
+# Plot waterlevel + Date 
+colors = list("rgbcmyk")
+xw = differenceWaterLevel.keys()
+yw = differenceWaterLevel.values()
+plt.scatter(xw,yw,color=colors.pop())
+plt.legend(differenceWaterLevel.keys())
+plt.title("Average water level difference throughout time")
+plt.ylabel("Average water level difference")
+plt.xlabel("Date")
+plt.show()
 
 # keep only waterlevel
 waterlevel_list = []
@@ -98,8 +127,7 @@ print("Standard Deviation: " + str(Standard_Deviation_waterLevel))
 #        print("--------")
 #print(counted_waterlevel)
 
-# Plot waterlevel
-colors = list("rgbcmyk")
+# Plot waterlevel Frequency
 x = counted_waterlevel.keys()
 y = counted_waterlevel.values()
 plt.scatter(x,y,color=colors.pop())
@@ -133,7 +161,7 @@ siteNo_Name = ""
 for k in counted_siteNo:
     if counted_siteNo[k] > siteNo_Mode:
         siteNo_Mode = counted_siteNo[k]
-        siteNo_Name = str(k);
+        siteNo_Name = str(k)
 print("Mode--> SiteNo: " + siteNo_Name + " Frequency: " + str(siteNo_Mode))
 
 # keep only Date
@@ -157,7 +185,7 @@ plt.show()
 
 print("---- Time ----")
 #Mode
-Time_Mode = -1;
+Time_Mode = -1
 Time_Name = ""
 for k in counted_Time:
     if counted_Time[k] > Time_Mode:
@@ -176,14 +204,16 @@ filename = "WaterLevelFrequency.csv"
 f = open(filename, "w+")
 f.close()
 
-dataToCSV = {'WaterLevel': x,'Frequency': y}
+keysList = list(differenceWaterLevel.keys())
+valuesList = list(differenceWaterLevel.values())
+dataToCSV = {'WaterLevel': valuesList,'date': keysList}
 df = pd.DataFrame.from_dict(dataToCSV)
 df.to_csv('WaterLevelFrequency.csv')
 # ///////////////////////////////////// #
 df = pd.read_csv("WaterLevelFrequency.csv")
 
 Y = df['WaterLevel']
-X = df['Frequency']
+X = df['date']
 
 #X=X.reshape(len(X),1)
 #Y=Y.reshape(len(Y),1)
@@ -202,8 +232,9 @@ Y_test = Y[-one_fourth_pos:]
 # Plot outputs
 plt.scatter(X_test, Y_test,  color='black')
 plt.title('Test Data')
-plt.xlabel('Water Level (Feet)')
-plt.ylabel('')
+plt.ylabel('Water Level (Feet)')
+plt.xlabel('Date')
+# clear units
 plt.xticks(())
 plt.yticks(())
 
