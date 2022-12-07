@@ -3,7 +3,6 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 import collections
-#import datetime
 from sklearn import datasets, linear_model
 import scipy
 import datetime
@@ -77,7 +76,7 @@ yw = differenceWaterLevel.values()
 plt.scatter(xw,yw,color=colors.pop())
 plt.legend(differenceWaterLevel.keys())
 plt.title("Average water level difference throughout time")
-plt.ylabel("Average water level difference")
+plt.ylabel("Average water level difference (Feet)")
 plt.xlabel("Date")
 plt.show()
 
@@ -215,18 +214,15 @@ df = pd.read_csv("WaterLevelFrequency.csv")
 Y = df['WaterLevel']
 X = df['date']
 
-#X=X.reshape(len(X),1)
-#Y=Y.reshape(len(Y),1)
+# convert date from str --> datetime objs
+X = X.apply(pd.to_datetime)
 
 # find 1/4 spot
-one_fourth_pos = len(waterlevel_list) / 4
+one_fourth_pos = len(differenceWaterLevel) / 4
 one_fourth_pos = int(one_fourth_pos)
 
 # split --> training/testing
-X_train = X[:-one_fourth_pos]
 X_test = X[-one_fourth_pos:]
-
-Y_train = Y[:-one_fourth_pos]
 Y_test = Y[-one_fourth_pos:]
 
 # Plot outputs
@@ -237,6 +233,26 @@ plt.xlabel('Date')
 # clear units
 plt.xticks(())
 plt.yticks(())
+
+X=X.values.reshape(len(X),1)
+Y=Y.values.reshape(len(Y),1)
+
+X_train = X[:-one_fourth_pos]
+Y_train = Y[:-one_fourth_pos]
+
+regr = linear_model.LinearRegression()
+
+# Train the model using the training sets
+regr.fit(X_train, Y_train)
+
+#convert 1D array to 2D array:
+X_test2 = []
+for each in X_test:
+    arr = []
+    arr.append(each)
+    X_test2.append(arr)
+# Plot outputs
+plt.plot(X_test2, regr.predict(X_test2), color='red',linewidth=2)
 
 plt.show()
 
