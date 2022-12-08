@@ -14,6 +14,9 @@ df['budget'] = pd.to_numeric(df['budget'],errors='coerce')
 df['popularity'] = pd.to_numeric(df['popularity'],errors='coerce')
 df['revenue'] = pd.to_numeric(df['revenue'],errors='coerce')
 
+# cols
+#print(df.columns.tolist())
+
 # Clean Data \\\
 df_revenue = df[['revenue']].values.tolist()
 df_budget = df['budget'].values.tolist()
@@ -114,6 +117,15 @@ plt.ylabel("Popularity")
 plt.xlabel("Budget ($USD)")
 plt.show()
 
+x = BudgetList
+y = revenueList
+plt.scatter(x,y,color=colors.pop())
+plt.legend(BudgetList)
+plt.title("Movie Budget vs Movie revenue")
+plt.ylabel("Revenue ($USD)")
+plt.xlabel("Budget ($USD)")
+plt.show()
+
 ### DAY 2 ###
 filename = "cleanedData.csv"
 f = open(filename, "w+")
@@ -140,6 +152,7 @@ Y = df2['revenue']
 
 # split --> training/testing
 length = len(X)
+print(length)
 X_train = X[int(-4*(length/5)):]
 Y_train = Y[int(-4*(length/5)):]
 
@@ -156,12 +169,11 @@ plt.xlabel('Budget ($USD)')
 plt.xticks(())
 plt.yticks(())
 
-# calculate covariances: 
+# calculate covariances: TRAIN
 Sxx = sum(((X_train-Average_budget))*(X_train-Average_budget)) / len(X_train)
 Sxy = sum(((X_train-Average_budget))*(Y_train-Average_revenue)) / len(X_train)
 
 beta_1 = Sxy/Sxx # calculate the slope 
-
 beta_0 = Average_revenue-(beta_1*Average_budget)
 
 # show what your estimation looks like
@@ -181,7 +193,32 @@ SSe = sum((Y_train-y_hat)**2)
 SSyy = sum((Y_train-Average(Y_train))**2)
 R2 = 1-SSe/SSyy;
 
+# Print results'
+print("--- Training ---")
+print("RMSE : " + str(RMSE))
+
+print("R^2 : " + str(R2))
+
+# calculate covariances: TRAIN
+Sxx = sum(((X_test-Average_budget))*(X_test-Average_budget)) / len(X_test)
+Sxy = sum(((X_test-Average_budget))*(Y_test-Average_revenue)) / len(X_test)
+
+beta_1 = Sxy/Sxx # calculate the slope 
+beta_0 = Average_revenue-(beta_1*Average_budget)
+
+# show what your estimation looks like
+y_hat = beta_1*X_test + beta_0
+
+# calculate RMSE
+RMSE = math.sqrt(sum(((y_hat - Y_test)**2))/len(Y_test))
+
+# calculate R^2
+SSe = sum((Y_test-y_hat)**2)
+SSyy = sum((Y_test-Average(Y_test))**2)
+R2 = 1-SSe/SSyy;
+
 # Print results
+print("--- Testing ---")
 print("RMSE : " + str(RMSE))
 
 print("R^2 : " + str(R2))
