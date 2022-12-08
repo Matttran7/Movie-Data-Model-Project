@@ -3,7 +3,6 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn import datasets, linear_model
-import sklearn.metrics
 import numpy
 import math  
 import random
@@ -120,7 +119,14 @@ filename = "cleanedData.csv"
 f = open(filename, "w+")
 f.close()
 
-dataToCSV = {'budget': BudgetList,'revenue': revenueList}
+#shuffle together
+temp = list(zip(BudgetList, revenueList))
+random.shuffle(temp)
+BudgetList2, revenueList2 = zip(*temp)
+res1, res2 = list(BudgetList2), list(revenueList2)
+
+#make new csv for only data
+dataToCSV = {'budget': BudgetList2,'revenue': revenueList2}
 df2 = pd.DataFrame.from_dict(dataToCSV)
 df2.to_csv('cleanedData.csv')
 # ///////////////////////////////////// #
@@ -162,13 +168,13 @@ beta_0 = Average_revenue-(beta_1*Average_budget)
 y_hat = beta_1*X_train + beta_0
 plt.plot(X_train,y_hat, color="r")
 # for view
-plt.xlim(right=70000000)
-plt.ylim(top=400000000)
+#plt.xlim(right=70000000)
+#plt.ylim(top=400000000)
 
 plt.show()
 
 # calculate RMSE
-RMSE = (sum((Y_train-y_hat)**2)/length)**.5
+RMSE = math.sqrt(sum(((y_hat - Y_train)**2))/len(Y_train))
 
 # calculate R^2
 SSe = sum((Y_train-y_hat)**2)
