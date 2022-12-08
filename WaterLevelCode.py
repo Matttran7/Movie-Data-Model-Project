@@ -6,6 +6,7 @@ from sklearn import datasets, linear_model
 import sklearn.metrics
 import numpy
 import math  
+import random
 
 df= pd.read_csv(r"tmdb_movies_data.csv")
 colors = list("rgbcmyk")
@@ -24,7 +25,7 @@ BudgetList = []
 PopularityList = []
 revenueList = []
 for ind in range(len(df_budget)):
-    if df_budget[ind] != 0:
+   # if df_budget[ind] != 0:
         BudgetList.append(df_budget[ind])
         PopularityList.append(df_popularity[ind])
         revenueList.append(df_revenue[ind][0])
@@ -63,8 +64,8 @@ Average_budget = Average(BudgetList)
 Average_budget = round(Average_budget, 2)
 #Median
 BudgetList.sort()
-midPoint = len(BudgetList) // 2
-Median_budget = (BudgetList[midPoint] + BudgetList[~midPoint]) / 2
+midPointB = len(BudgetList) // 2
+Median_budget = (BudgetList[midPointB] + BudgetList[~midPointB]) / 2
 Median_budget = round(Median_budget, 2)
 #Range
 minR = min(BudgetList)
@@ -87,8 +88,8 @@ Average_revenue = Average(revenueList)
 Average_revenue = round(Average_revenue, 2)
 #Median
 revenueList.sort()
-midPoint = len(revenueList) // 2
-Median_revenue = (revenueList[midPoint] + revenueList[~midPoint]) / 2
+midPointr = len(revenueList) // 2
+Median_revenue = (revenueList[midPointr] + revenueList[~midPointr]) / 2
 Median_revenue = round(Median_revenue, 2)
 #Range
 minR = min(revenueList)
@@ -139,6 +140,7 @@ Y_train = Y[int(-4*(length/5)):]
 X_test = X[:int(4*(length/5))]
 Y_test = Y[:int(4*(length/5))]
 
+
 # Plot outputs
 plt.scatter(X_test, Y_test,  color='black')
 plt.title('Test Data')
@@ -149,12 +151,12 @@ plt.xticks(())
 plt.yticks(())
 
 # calculate covariances: 
-Sxx = sum(((X_train-Average_budget))*(X_train-Average_budget))
-Sxy = sum(((X_train-Average_budget))*(Y_train-Average_revenue))
+Sxx = sum(((X_train-Average_budget))*(X_train-Average_budget)) / len(X_train)
+Sxy = sum(((X_train-Average_budget))*(Y_train-Average_revenue)) / len(X_train)
 
 beta_1 = Sxy/Sxx # calculate the slope 
 
-beta_0 = Average_revenue-beta_1*Average_budget 
+beta_0 = Average_revenue-(beta_1*Average_budget)
 
 # show what your estimation looks like
 y_hat = beta_1*X_train + beta_0
@@ -175,4 +177,5 @@ R2 = 1-SSe/SSyy;
 
 # Print results
 print("RMSE : " + str(RMSE))
+
 print("R^2 : " + str(R2))
