@@ -3,8 +3,9 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn import datasets, linear_model
-import sklearn.metrics as metrics
+import sklearn.metrics
 import numpy
+import math  
 
 df= pd.read_csv(r"tmdb_movies_data.csv")
 colors = list("rgbcmyk")
@@ -13,6 +14,7 @@ df['budget'] = pd.to_numeric(df['budget'],errors='coerce')
 df['popularity'] = pd.to_numeric(df['popularity'],errors='coerce')
 df['revenue'] = pd.to_numeric(df['revenue'],errors='coerce')
 
+# Clean Data \\\
 df_revenue = df[['revenue']].values.tolist()
 df_budget = df['budget'].values.tolist()
 df_popularity = df['popularity'].values.tolist()
@@ -126,17 +128,16 @@ df2 = pd.read_csv("cleanedData.csv")
 df2['budget'] = pd.to_numeric(df2['budget'],errors='coerce')
 df2['revenue'] = pd.to_numeric(df2['revenue'],errors='coerce')
 
-Y = df2['budget']
-X = df2['revenue']
-
-
-# find 1/4 spot
-one_fourth_pos = len(PopularityList) / 2
-one_fourth_pos = int(one_fourth_pos)
+X = df2['budget']
+Y = df2['revenue']
 
 # split --> training/testing
-X_test = X[-one_fourth_pos:]
-Y_test = Y[-one_fourth_pos:]
+length = len(X)
+X_train = X[int(-4*(length/5)):]
+Y_train = Y[int(-4*(length/5)):]
+
+X_test = X[:int(4*(length/5))]
+Y_test = Y[:int(4*(length/5))]
 
 # Plot outputs
 plt.scatter(X_test, Y_test,  color='black')
@@ -147,32 +148,31 @@ plt.xlabel('Budget ($USD)')
 plt.xticks(())
 plt.yticks(())
 
-X=X.values.reshape(len(X),1)
-Y=Y.values.reshape(len(Y),1)
+# calculate covariances: 
+Sxx = sum(((X_train-Average_budget))*(X_train-Average_budget))
+Sxy = sum(((X_train-Average_budget))*(Y_train-Average_revenue))
 
-X_train = X[:-one_fourth_pos]
-Y_train = Y[:-one_fourth_pos]
+beta_1 = Sxy/Sxx # calculate the slope 
 
-regr = linear_model.LinearRegression()
+beta_0 = Average_revenue-beta_1*Average_budget 
 
-# Train the model using the training sets
-regr.fit(X_train, Y_train)
-
-#convert 1D array to 2D array:
-X_test2 = []
-for each in X_test:
-    arr = []
-    arr.append(each)
-    X_test2.append(arr)
-# Plot outputs
-plt.plot(X_test2, regr.predict(X_test2), color='red',linewidth=2)
+# show what your estimation looks like
+y_hat = beta_1*X_train + beta_0
+plt.plot(X_train,y_hat, color="r")
+# for view
+plt.xlim(right=70000000)
+plt.ylim(top=400000000)
 
 plt.show()
 
-# how did it do?
-mse = metrics.mean_squared_error(Y_test, Y_train)
-rmse = np.sqrt(mse) 
-r2 = metrics.r2_score(Y_test,Y_train)
+# calculate RMSE
+RMSE = (sum((Y_train-y_hat)**2)/length)**.5
 
-print("RMSE -- >  " + str(rmse))
-print("R^2 -- >  " + str(r2))
+# calculate R^2
+SSe = sum((Y_train-y_hat)**2)
+SSyy = sum((Y_train-Average(Y_train))**2)
+R2 = 1-SSe/SSyy;
+
+# Print results
+print("RMSE : " + str(RMSE))
+print("R^2 : " + str(R2))
